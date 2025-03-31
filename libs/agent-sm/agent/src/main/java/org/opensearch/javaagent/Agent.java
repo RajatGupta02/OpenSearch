@@ -8,13 +8,13 @@
 
 package org.opensearch.javaagent;
 
-import org.opensearch.javaagent.bootstrap.AgentPolicy;
-
 import java.lang.instrument.Instrumentation;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.util.Map;
+
+import org.opensearch.javaagent.bootstrap.AgentPolicy;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -79,7 +79,7 @@ public class Agent {
                         .or(ElementMatchers.named("open"))
                         .or(ElementMatchers.named("write"))
                         .or(ElementMatchers.named("read"))
-                        .or(ElementMatchers.isConstructor())
+                        .or(ElementMatchers.isAbstract())
                 )
         );
 

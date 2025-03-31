@@ -13,6 +13,9 @@ dependencies {
   implementation project(":libs:agent-sm:bootstrap")
   implementation "net.bytebuddy:byte-buddy:${versions.bytebuddy}"
   compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+
+  testImplementation project(":test:framework")
+  testImplementation "junit:junit:${versions.junit}"
 }
 
 jar {
@@ -31,7 +34,7 @@ compileJava {
   options.compilerArgs -= '-Werror'
 }
 
-test.enabled = false
+test.enabled = true
 testingConventions.enabled = false
 
 tasks.named('forbiddenApisMain').configure {
@@ -42,6 +45,16 @@ task copyJars(type: Copy) {
   from configurations.runtimeClasspath
   into "$buildDir/distributions"
   dependsOn jar
+}
+
+tasks.named('test') {
+  dependsOn(copyJars)
+
+  doFirst {
+    def agentPath = jar.archiveFile.get().asFile.absolutePath
+    jvmArgs += ["-javaagent:${agentPath}"]
+    systemProperty 'javaagent.path', agentPath
+  }
 }
 
 thirdPartyAudit {
