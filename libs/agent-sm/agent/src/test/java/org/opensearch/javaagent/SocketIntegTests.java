@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import org.opensearch.test.OpenSearchTestCase;
 
 @SuppressWarnings("removal")
+@AwaitsFix(bugUrl = "https://github.com/opensearch-project/OpenSearch/issues/17662")
 public class SocketIntegTests extends OpenSearchTestCase {
 
     @Override
@@ -51,7 +52,7 @@ public class SocketIntegTests extends OpenSearchTestCase {
         }
     }
 
-public void testBasicUnixDomainSocket() throws IOException {
+    public void testBasicUnixDomainSocket() throws IOException {
         // Skip test if not running on Unix-like system
         assumeTrue("Test requires Unix-like system", 
             System.getProperty("os.name").toLowerCase().matches(".*(unix|linux|mac).*"));
