@@ -8,10 +8,7 @@
 
 package org.opensearch.javaagent;
 
-import org.opensearch.javaagent.bootstrap.AgentPolicy;
-
 import java.lang.StackWalker.Option;
-import java.lang.StackWalker.StackFrame;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.NetPermission;
@@ -19,8 +16,9 @@ import java.net.SocketPermission;
 import java.net.UnixDomainSocketAddress;
 import java.security.Policy;
 import java.security.ProtectionDomain;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+
+import org.opensearch.javaagent.bootstrap.AgentPolicy;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.Origin;
@@ -29,8 +27,6 @@ import net.bytebuddy.asm.Advice.Origin;
  * SocketChannelInterceptor
  */
 public class SocketChannelInterceptor {
-    private static final StackWalker walker = StackWalker.getInstance(Option.RETAIN_CLASS_REFERENCE);
-
     /**
      * SocketChannelInterceptor
      */
@@ -50,43 +46,27 @@ public class SocketChannelInterceptor {
             return; /* noop */
         }
 
-        java.security.Permission permission = null;
+        final StackWalker walker = StackWalker.getInstance(Option.RETAIN_CLASS_REFERENCE);
+        final List<ProtectionDomain> callers = walker.walk(new StackCallerChainExtractor());
 
         if (args[0] instanceof InetSocketAddress address) {
             if (!AgentPolicy.isTrustedHost(address.getHostString())) {
                 final String host = address.getHostString() + ":" + address.getPort();
-                permission = new SocketPermission(host, "connect,resolve");
-            }
-        } else if (args[0] instanceof UnixDomainSocketAddress) {
-            permission = new NetPermission("accessUnixDomainSocket");
-        }
 
-        if (permission != null) {
-            checkPermission(policy, permission);
-        }
-    }
-
-    /**
-    * permission evauations
-    * @param policy policy
-    * @param permission permission
-    * @throws Exception exceptions
-    */
-    @SuppressWarnings("removal")
-    private static void checkPermission(Policy policy, java.security.Permission permission) throws Exception {
-        Set<ProtectionDomain> visitedDomains = new HashSet<>();
-
-        walker.walk(frames -> {
-            frames.map(StackFrame::getDeclaringClass)
-                .map(Class::getProtectionDomain)
-                .filter(pd -> pd.getCodeSource() != null)
-                .filter(visitedDomains::add)  // Only process domains we haven't seen yet in the current walk
-                .forEach(pd -> {
-                    if (!policy.implies(pd, permission)) {
-                        throw new SecurityException("Denied access, domain " + pd);
+                final SocketPermission permission = new SocketPermission(host, "connect,resolve");
+                for (final ProtectionDomain domain : callers) {
+                    if (!policy.implies(domain, permission)) {
+                        throw new SecurityException("Denied access to: " + host + ", domain " + domain);
                     }
-                });
-            return null; // Return value not used
-        });
+                }
+            }
+        } else if (args[0] instanceof UnixDomainSocketAddress address) {
+            final NetPermission permission = new NetPermission("accessUnixDomainSocket");
+            for (final ProtectionDomain domain : callers) {
+                if (!policy.implies(domain, permission)) {
+                    throw new SecurityException("Denied access to: " + address + ", domain " + domain);
+                }
+            }
+        }
     }
 }

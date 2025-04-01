@@ -18,15 +18,11 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 import org.opensearch.test.OpenSearchTestCase;
 
 @SuppressWarnings("removal")
 public class SocketIntegTests extends OpenSearchTestCase {
-
-    private static final List<String> UNIX_OS = List.of("linux", "mac", "unix", "aix", "sunos");
-
 
     @Override
     public void setUp() throws Exception {
