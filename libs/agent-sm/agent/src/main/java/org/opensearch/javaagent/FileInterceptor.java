@@ -69,6 +69,7 @@ public class FileInterceptor {
         boolean isDelete = method.getName().equals("delete") || method.getName().equals("deleteIfExists");
 
         // Check each permission separately
+        System.out.println("Method Name = " + method.getName());
         for (final ProtectionDomain domain : callers) {
             // Handle FileChannel.open() separately to check read/write permissions properly
             if (method.getName().equals("open")) {

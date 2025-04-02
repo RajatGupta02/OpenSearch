@@ -19,10 +19,11 @@ import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+// import org.apache.lucene.tests.util.LuceneTestCase.AwaitsFix;
 import org.opensearch.test.OpenSearchTestCase;
 
 @SuppressWarnings("removal")
-@AwaitsFix(bugUrl = "https://github.com/opensearch-project/OpenSearch/issues/17662")
+// @AwaitsFix(bugUrl = "https://github.com/opensearch-project/OpenSearch/issues/17662")
 public class SocketIntegTests extends OpenSearchTestCase {
 
     @Override
@@ -56,7 +57,7 @@ public class SocketIntegTests extends OpenSearchTestCase {
         // Skip test if not running on Unix-like system
         assumeTrue("Test requires Unix-like system", 
             System.getProperty("os.name").toLowerCase().matches(".*(unix|linux|mac).*"));
-        
+
         Path socketPath = Path.of("/tmp/test-" + System.nanoTime() + ".sock");
 
         ServerSocketChannel serverChannel = null;
