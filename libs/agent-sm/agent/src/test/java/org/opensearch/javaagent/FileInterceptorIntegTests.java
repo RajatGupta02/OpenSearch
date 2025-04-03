@@ -30,12 +30,19 @@ import org.junit.Test;
 import java.io.FileInputStream;
 import static org.junit.Assert.*;
 
-
 public class FileInterceptorIntegTests extends OpenSearchTestCase {
+
+    private Path getTestDir() {
+        Path baseDir = Path.of(System.getProperty("user.dir"));
+        Path integFiles = baseDir.resolve("integ-files").normalize();
+
+        return integFiles;
+    }
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
+        Files.createDirectories(getTestDir());
     }
 
     @Override
@@ -44,8 +51,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
     }
 
     public void testFileInputStream() throws Exception {
-        // Ensure /tmp exists and is writable
-        Path tmpDir = Path.of("/tmp");
+        Path tmpDir = getTestDir();
         assertTrue("Tmp directory should exist", Files.exists(tmpDir));
         assertTrue("Tmp directory should be writable", Files.isWritable(tmpDir));
         
@@ -82,7 +88,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
     }
 
     public void testOpenForReadAndWrite() throws Exception {
-        Path tmpDir = Path.of("/tmp");
+        Path tmpDir = getTestDir();
         Path tempPath = tmpDir.resolve("test-open-rw-" + randomAlphaOfLength(8) + ".txt");
         
         try {
@@ -112,7 +118,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
     }
 
     public void testCopy() throws Exception {
-        Path tmpDir = Path.of("/tmp");
+        Path tmpDir = getTestDir();
         Path sourcePath = tmpDir.resolve("test-source-" + randomAlphaOfLength(8) + ".txt");
         Path targetPath = tmpDir.resolve("test-target-" + randomAlphaOfLength(8) + ".txt");
         
@@ -136,7 +142,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
     }
 
     public void testCreateFile() throws Exception {
-        Path tmpDir = Path.of("/tmp");
+        Path tmpDir = getTestDir();
         Path tempPath = tmpDir.resolve("test-create-" + randomAlphaOfLength(8) + ".txt");
         
         try {
@@ -152,7 +158,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
     }
 
     public void testMove() throws Exception {
-        Path tmpDir = Path.of("/tmp");
+        Path tmpDir = getTestDir();
         Path sourcePath = tmpDir.resolve("test-source-" + randomAlphaOfLength(8) + ".txt");
         Path targetPath = tmpDir.resolve("test-target-" + randomAlphaOfLength(8) + ".txt");
         
@@ -175,7 +181,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
     }
 
     public void testCreateLink() throws Exception {
-        Path tmpDir = Path.of("/tmp");
+        Path tmpDir = getTestDir();
         Path originalPath = tmpDir.resolve("test-original-" + randomAlphaOfLength(8) + ".txt");
         Path linkPath = tmpDir.resolve("test-link-" + randomAlphaOfLength(8) + ".txt");
         
@@ -198,9 +204,9 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
     }
 
     public void testDelete() throws Exception {
-        Path tmpDir = Path.of("/tmp");
+        Path tmpDir = getTestDir();
         Path tempPath = tmpDir.resolve("test-delete-" + randomAlphaOfLength(8) + ".txt");
-        
+
         try {
             // Create a file with some content
             String content = "test content";
@@ -222,5 +228,4 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
             Files.deleteIfExists(tempPath);
         }
     }
-
 }
