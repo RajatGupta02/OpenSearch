@@ -1,6 +1,5 @@
 package org.opensearch.javaagent;
 
-import org.opensearch.test.OpenSearchTestCase;
 import org.opensearch.javaagent.bootstrap.AgentPolicy;
 
 import java.lang.reflect.Method;
@@ -30,26 +29,45 @@ import org.junit.Test;
 import java.io.FileInputStream;
 import static org.junit.Assert.*;
 
-public class FileInterceptorIntegTests extends OpenSearchTestCase {
+import org.junit.Test;
+import org.junit.BeforeClass;
+import java.security.Policy;
+import java.security.PermissionCollection;
+import java.security.Permissions;
+import java.security.ProtectionDomain;
+import java.io.FilePermission;
+import java.util.UUID;
 
-    private Path getTestDir() {
+@SuppressWarnings("removal")
+public class FileInterceptorIntegTests {
+
+    private static Path getTestDir() {
         Path baseDir = Path.of(System.getProperty("user.dir"));
-        Path integFiles = baseDir.resolve("integ-files").normalize();
-
-        return integFiles;
+        Path integTestFiles = baseDir.resolve("integ-test-files").normalize();
+        return integTestFiles;
     }
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
+    private String randomAlphaOfLength(int length) {
+        // Using UUID to generate random string and taking first 'length' characters
+        return UUID.randomUUID().toString().replaceAll("-", "").substring(0, length);
+    }
+
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        Policy policy = new Policy() {
+            @Override
+            public PermissionCollection getPermissions(ProtectionDomain domain) {
+                Permissions permissions = new Permissions();
+                permissions.add(new FilePermission(System.getProperty("user.dir") + "/-", "read,write,delete"));
+                return permissions;
+            }
+        };
+        AgentPolicy.setPolicy(policy);
         Files.createDirectories(getTestDir());
     }
 
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    @Test
     public void testFileInputStream() throws Exception {
         Path tmpDir = getTestDir();
         assertTrue("Tmp directory should exist", Files.exists(tmpDir));
@@ -87,6 +105,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
         }
     }
 
+    @Test
     public void testOpenForReadAndWrite() throws Exception {
         Path tmpDir = getTestDir();
         Path tempPath = tmpDir.resolve("test-open-rw-" + randomAlphaOfLength(8) + ".txt");
@@ -117,6 +136,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
         }
     }
 
+    @Test
     public void testCopy() throws Exception {
         Path tmpDir = getTestDir();
         Path sourcePath = tmpDir.resolve("test-source-" + randomAlphaOfLength(8) + ".txt");
@@ -141,6 +161,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
         }
     }
 
+    @Test
     public void testCreateFile() throws Exception {
         Path tmpDir = getTestDir();
         Path tempPath = tmpDir.resolve("test-create-" + randomAlphaOfLength(8) + ".txt");
@@ -157,6 +178,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
         }
     }
 
+    @Test
     public void testMove() throws Exception {
         Path tmpDir = getTestDir();
         Path sourcePath = tmpDir.resolve("test-source-" + randomAlphaOfLength(8) + ".txt");
@@ -180,6 +202,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
         }
     }
 
+    @Test
     public void testCreateLink() throws Exception {
         Path tmpDir = getTestDir();
         Path originalPath = tmpDir.resolve("test-original-" + randomAlphaOfLength(8) + ".txt");
@@ -203,6 +226,7 @@ public class FileInterceptorIntegTests extends OpenSearchTestCase {
         }
     }
 
+    @Test
     public void testDelete() throws Exception {
         Path tmpDir = getTestDir();
         Path tempPath = tmpDir.resolve("test-delete-" + randomAlphaOfLength(8) + ".txt");

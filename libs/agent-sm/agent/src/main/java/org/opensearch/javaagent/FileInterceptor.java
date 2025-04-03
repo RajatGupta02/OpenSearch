@@ -19,6 +19,9 @@ import java.security.ProtectionDomain;
 import java.util.List;
 import java.util.Set;
 
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import net.bytebuddy.asm.Advice;
 
 /**
@@ -86,7 +89,6 @@ public class FileInterceptor {
         boolean isDelete = DELETE_OPERATIONS.contains(method.getName());
 
         // Check each permission separately
-        System.out.println("Method Name = " + method.getName());
         for (final ProtectionDomain domain : callers) {
             // Handle FileChannel.open() separately to check read/write permissions properly
             if (method.getName().equals("open")) {

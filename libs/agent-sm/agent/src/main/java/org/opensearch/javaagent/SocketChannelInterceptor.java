@@ -8,6 +8,8 @@
 
 package org.opensearch.javaagent;
 
+import org.opensearch.javaagent.bootstrap.AgentPolicy;
+
 import java.lang.StackWalker.Option;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
@@ -16,9 +18,8 @@ import java.net.SocketPermission;
 import java.net.UnixDomainSocketAddress;
 import java.security.Policy;
 import java.security.ProtectionDomain;
+import java.util.stream.Stream;
 import java.util.List;
-
-import org.opensearch.javaagent.bootstrap.AgentPolicy;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.Origin;
