@@ -35,7 +35,9 @@ public class Agent {
      */
     private Agent() {}
 
-    
+    /**
+     * List of methods that are intercepted
+     */
     private static final String[] INTERCEPTED_METHODS = {
         "delete",
         "deleteIfExists",

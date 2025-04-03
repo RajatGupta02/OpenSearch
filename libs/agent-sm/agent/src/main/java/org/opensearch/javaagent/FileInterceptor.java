@@ -31,6 +31,9 @@ public class FileInterceptor {
     public FileInterceptor() {}
 
     //Byte-buddy needs it to be public to be able to access this field
+    /**
+     * mutating operations
+     */
     public static final Set<String> MUTATING_OPERATIONS = Set.of(
         "write",
         "createFile",
@@ -41,6 +44,9 @@ public class FileInterceptor {
         "newByteChannel"
     );
 
+    /**
+     * Delete operations
+     */
     public static final Set<String> DELETE_OPERATIONS = Set.of(
         "delete",
         "deleteIfExists"
