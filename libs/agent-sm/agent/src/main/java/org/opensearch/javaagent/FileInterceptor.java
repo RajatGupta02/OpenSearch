@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import java.security.Policy;
 import java.security.ProtectionDomain;
 import java.util.List;
+import java.util.Set;
 
 import net.bytebuddy.asm.Advice;
 
@@ -28,6 +29,22 @@ public class FileInterceptor {
      * FileInterceptor
      */
     public FileInterceptor() {}
+
+    //Byte-buddy needs it to be public to be able to access this field
+    public static final Set<String> MUTATING_OPERATIONS = Set.of(
+        "write",
+        "createFile",
+        "createDirectories",
+        "createLink",
+        "copy",
+        "move",
+        "newByteChannel"
+    );
+
+    public static final Set<String> DELETE_OPERATIONS = Set.of(
+        "delete",
+        "deleteIfExists"
+    );
 
     /**
      * Intercepts file operations
@@ -59,14 +76,8 @@ public class FileInterceptor {
         final StackWalker walker = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
         final List<ProtectionDomain> callers = walker.walk(new StackCallerChainExtractor());
 
-        boolean isMutating = method.getName().startsWith("write")
-            || method.getName().equals("createFile")
-            || method.getName().equals("createDirectories")
-            || method.getName().equals("createLink")
-            || method.getName().equals("copy")
-            || method.getName().equals("move")
-            || method.getName().equals("newByteChannel");
-        boolean isDelete = method.getName().equals("delete") || method.getName().equals("deleteIfExists");
+        boolean isMutating = MUTATING_OPERATIONS.contains(method.getName());
+        boolean isDelete = DELETE_OPERATIONS.contains(method.getName());
 
         // Check each permission separately
         System.out.println("Method Name = " + method.getName());

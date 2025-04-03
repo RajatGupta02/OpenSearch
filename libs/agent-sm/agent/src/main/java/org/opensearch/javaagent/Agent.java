@@ -35,6 +35,21 @@ public class Agent {
      */
     private Agent() {}
 
+    
+    private static final String[] INTERCEPTED_METHODS = {
+        "delete",
+        "deleteIfExists",
+        "createFile",
+        "createDirectories",
+        "createLink",
+        "move",
+        "copy",
+        "newByteChannel",
+        "open",
+        "write",
+        "read"
+    };
+
     /**
      * Premain
      * @param agentArguments agent arguments
@@ -67,20 +82,8 @@ public class Agent {
 
         final AgentBuilder.Transformer fileTransformer = (b, typeDescription, classLoader, module, pd) -> b.visit(
             Advice.to(FileInterceptor.class)
-                .on(
-                    ElementMatchers.named("delete")
-                        .or(ElementMatchers.named("deleteIfExists"))
-                        .or(ElementMatchers.named("createFile"))
-                        .or(ElementMatchers.named("createDirectories"))
-                        .or(ElementMatchers.named("createLink"))
-                        .or(ElementMatchers.named("move"))
-                        .or(ElementMatchers.named("copy"))
-                        .or(ElementMatchers.named("newByteChannel"))
-                        .or(ElementMatchers.named("open"))
-                        .or(ElementMatchers.named("write"))
-                        .or(ElementMatchers.named("read"))
-                        .or(ElementMatchers.isAbstract())
-                )
+                .on(ElementMatchers.namedOneOf(INTERCEPTED_METHODS).or(ElementMatchers.isAbstract())
+            )
         );
 
         ClassInjector.UsingUnsafe.ofBootLoader()
@@ -89,7 +92,9 @@ public class Agent {
                     new TypeDescription.ForLoadedType(StackCallerChainExtractor.class),
                     ClassFileLocator.ForClassLoader.read(StackCallerChainExtractor.class),
                     new TypeDescription.ForLoadedType(AgentPolicy.class),
-                    ClassFileLocator.ForClassLoader.read(AgentPolicy.class)
+                    ClassFileLocator.ForClassLoader.read(AgentPolicy.class),
+                    new TypeDescription.ForLoadedType(FileInterceptor.class),
+                    ClassFileLocator.ForClassLoader.read(FileInterceptor.class) 
                 )
             );
 
