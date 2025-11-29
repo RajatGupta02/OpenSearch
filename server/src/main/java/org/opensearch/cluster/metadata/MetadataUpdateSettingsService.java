@@ -607,13 +607,22 @@ public class MetadataUpdateSettingsService {
             }
         }
 
-        // Validate store type changes
+        // Validate store type changes - must be bidirectional for cryptofs
         String newStoreType = indexSettings.get("index.store.type");
-        if ("cryptofs".equals(newStoreType)) {
+        if (newStoreType != null) {
             for (Index index : indices) {
                 String currentStoreType = clusterState.metadata().getIndexSafe(index).getSettings().get("index.store.type", "");
-                if (!"cryptofs".equals(currentStoreType)) {
+
+                // Prevent changing TO cryptofs
+                if ("cryptofs".equals(newStoreType) && !"cryptofs".equals(currentStoreType)) {
                     throw new IllegalArgumentException("Cannot change store type to 'cryptofs' for index [" + index.getName() + "]");
+                }
+
+                // Prevent changing FROM cryptofs
+                if ("cryptofs".equals(currentStoreType) && !"cryptofs".equals(newStoreType)) {
+                    throw new IllegalArgumentException(
+                        "Cannot change store type from 'cryptofs' for index [" + index.getName() + "] - cryptofs store type is immutable"
+                    );
                 }
             }
         }
