@@ -142,6 +142,7 @@ public class MetadataUpdateSettingsService {
         validateRefreshIntervalSettings(normalizedSettings, clusterService.getClusterSettings());
         validateTranslogDurabilitySettings(normalizedSettings, clusterService.getClusterSettings(), clusterService.getSettings());
         validateIndexTotalPrimaryShardsPerNodeSetting(normalizedSettings, clusterService);
+        validateCryptoStoreSettings(normalizedSettings, request.indices(), clusterService.state());
         final int defaultReplicaCount = clusterService.getClusterSettings().get(Metadata.DEFAULT_REPLICA_COUNT_SETTING);
 
         Settings.Builder settingsForClosedIndices = Settings.builder();
@@ -587,6 +588,34 @@ public class MetadataUpdateSettingsService {
                     + INDEX_TOTAL_REMOTE_CAPABLE_PRIMARY_SHARDS_PER_NODE_SETTING.getKey()
                     + "] can only be used with remote store enabled clusters"
             );
+        }
+    }
+
+    /**
+     * Validates crypto store settings are immutable after index creation.
+     */
+    public static void validateCryptoStoreSettings(Settings indexSettings, Index[] indices, ClusterState clusterState) {
+        final String[] restrictedCryptoSettings = {
+            "index.store.crypto.key_provider",
+            "index.store.crypto.kms.key_arn",
+            "index.store.crypto.kms.encryption_context" };
+
+        // Crypto settings are completely immutable - reject any attempt to modify them
+        for (String settingKey : restrictedCryptoSettings) {
+            if (indexSettings.keySet().contains(settingKey)) {
+                throw new IllegalArgumentException("Cannot update [" + settingKey + "] - crypto settings are immutable");
+            }
+        }
+
+        // Validate store type changes
+        String newStoreType = indexSettings.get("index.store.type");
+        if ("cryptofs".equals(newStoreType)) {
+            for (Index index : indices) {
+                String currentStoreType = clusterState.metadata().getIndexSafe(index).getSettings().get("index.store.type", "");
+                if (!"cryptofs".equals(currentStoreType)) {
+                    throw new IllegalArgumentException("Cannot change store type to 'cryptofs' for index [" + index.getName() + "]");
+                }
+            }
         }
     }
 }
