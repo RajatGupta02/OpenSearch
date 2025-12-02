@@ -595,23 +595,27 @@ public class MetadataUpdateSettingsService {
      * Validates crypto store settings are immutable after index creation.
      */
     public static void validateCryptoStoreSettings(Settings indexSettings, Index[] indices, ClusterState clusterState) {
-        // Validate store type changes - must be bidirectional for cryptofs
-        String newStoreType = indexSettings.get("index.store.type");
-        if (newStoreType != null) {
-            for (Index index : indices) {
-                String currentStoreType = clusterState.metadata().getIndexSafe(index).getSettings().get("index.store.type", "");
+        final String storeTypeKey = "index.store.type";
 
-                // Prevent changing TO cryptofs
-                if ("cryptofs".equals(newStoreType) && !"cryptofs".equals(currentStoreType)) {
-                    throw new IllegalArgumentException("Cannot change store type to 'cryptofs' for index [" + index.getName() + "]");
-                }
+        // Only validate if store.type is being explicitly modified
+        if (!indexSettings.keySet().contains(storeTypeKey)) {
+            return;
+        }
 
-                // Prevent changing FROM cryptofs
-                if ("cryptofs".equals(currentStoreType) && !"cryptofs".equals(newStoreType)) {
-                    throw new IllegalArgumentException(
-                        "Cannot change store type from 'cryptofs' for index [" + index.getName() + "] - cryptofs store type is immutable"
-                    );
-                }
+        for (Index index : indices) {
+            String currentStoreType = clusterState.metadata().getIndexSafe(index).getSettings().get(storeTypeKey, "");
+            String newStoreType = indexSettings.get(storeTypeKey);
+
+            // Prevent changing FROM cryptofs to anything else (including null)
+            if ("cryptofs".equals(currentStoreType) && !"cryptofs".equals(newStoreType)) {
+                throw new IllegalArgumentException(
+                    "Cannot change store type from 'cryptofs' for index [" + index.getName() + "] - cryptofs store type is immutable"
+                );
+            }
+
+            // Prevent changing TO cryptofs from any other type
+            if (!"cryptofs".equals(currentStoreType) && "cryptofs".equals(newStoreType)) {
+                throw new IllegalArgumentException("Cannot change store type to 'cryptofs' for index [" + index.getName() + "]");
             }
         }
     }
