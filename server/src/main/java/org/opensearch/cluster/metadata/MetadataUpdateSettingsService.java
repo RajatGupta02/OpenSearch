@@ -595,18 +595,6 @@ public class MetadataUpdateSettingsService {
      * Validates crypto store settings are immutable after index creation.
      */
     public static void validateCryptoStoreSettings(Settings indexSettings, Index[] indices, ClusterState clusterState) {
-        final String[] restrictedCryptoSettings = {
-            "index.store.crypto.key_provider",
-            "index.store.crypto.kms.key_arn",
-            "index.store.crypto.kms.encryption_context" };
-
-        // Crypto settings are completely immutable - reject any attempt to modify them
-        for (String settingKey : restrictedCryptoSettings) {
-            if (indexSettings.keySet().contains(settingKey)) {
-                throw new IllegalArgumentException("Cannot update [" + settingKey + "] - crypto settings are immutable");
-            }
-        }
-
         // Validate store type changes - must be bidirectional for cryptofs
         String newStoreType = indexSettings.get("index.store.type");
         if (newStoreType != null) {
